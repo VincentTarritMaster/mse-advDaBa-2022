@@ -28,12 +28,12 @@ public class Example {
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		String jsonPath = System.getenv("JSON_FILE");
-		int maxArticles = Integer.max(1000, Integer.parseInt(System.getenv("MAX_NODES")));
+		int maxNodes = Integer.max(1000, Integer.parseInt(System.getenv("MAX_NODES")));
 		String neo4jIP = System.getenv("NEO4J_IP");
 		int batchSize = Integer.max(1000, Integer.parseInt(System.getenv("BATCH_SIZE")));
 
 		System.out.println("JSON: " + jsonPath);
-		System.out.println("Max articles: " + maxArticles);
+		System.out.println("Max nodes: " + maxNodes);
 		System.out.println("Neo4j IP: " + neo4jIP);
 		System.out.println("Batch size: " + batchSize);
 
@@ -72,7 +72,7 @@ public class Example {
 			Transaction tx = session.beginTransaction();
 
 			String line;
-			while ((line = br.readLine()) != null && count < maxArticles) {
+			while ((line = br.readLine()) != null && count < maxNodes) {
 
 				try {
 					JsonNode json = mapper.readTree(line);
@@ -127,10 +127,8 @@ public class Example {
 
 						System.out.println("Inserted: " + count);
 
-						if (txCounter % 5 == 0) {
-							tx.commit();
-							tx = session.beginTransaction();
-						}
+						tx.commit();
+						tx = session.beginTransaction();
 					}
 
 				} catch (Exception e) {

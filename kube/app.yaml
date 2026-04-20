@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  selector:
+    app: neo4j
+  ports:
+    - name: http
+      port: 7474
+      targetPort: 7474
+    - name: bolt
+      port: 7687
+      targetPort: 7687
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neo4j
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: neo4j
+  template:
+    metadata:
+      labels:
+        app: neo4j
+    spec:
+      containers:
+        - name: neo4j
+          image: neo4j:4.4.15-community
+          ports:
+            - containerPort: 7474
+            - containerPort: 7687
+          env:
+            - name: NEO4J_AUTH
+              value: "neo4j/test"
+          resources:
+            limits:
+              memory: "3Gi"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: logs
+              mountPath: /logs
+            - name: conf
+              mountPath: /conf
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}
+        - name: conf
+          emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: neo4j-app
+  template:
+    metadata:
+      labels:
+        app: neo4j-app
+    spec:
+      containers:
+        - name: app
+          image: vincenttarrit/neo4jtp:latest
+          env:
+            - name: JSON_FILE
+              value: "http://vmrum.isc.heia-fr.ch/files/DBLP-Citation-network-V18.jsonl"
+            - name: MAX_NODES
+              value: "10000"
+            - name: BATCH_SIZE
+              value: "5000"
+            - name: NEO4J_IP
+              value: "db"
+          resources:
+            limits:
+              memory: "4Gi"
