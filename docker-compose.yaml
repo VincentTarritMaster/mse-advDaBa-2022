@@ -25,10 +25,12 @@ services:
     networks:
       - internal
     volumes:
-      - $PWD/dblpExample.jsonl:/file.jsonl
+      - $PWD/data/data.jsonl:/file.jsonl
     environment:
-      - JSON_FILE=/file.jsonl
+      # JSON_FILE=/file.jsonl
+      - JSON_FILE=http://vmrum.isc.heia-fr.ch/files/DBLP-Citation-network-V18.jsonl
       - MAX_NODES=10000
+      - BATCH_SIZE=5000
       - NEO4J_IP=172.24.0.10 # must be the same as above
     deploy:
       resources:

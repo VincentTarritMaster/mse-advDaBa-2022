@@ -1,0 +1,6 @@
+data
+neo4j_mount/data
+neo4j_mount/logs
+.metals
+.vscode
+.DS_Store
