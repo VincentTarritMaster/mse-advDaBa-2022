@@ -12,24 +12,18 @@ import static org.neo4j.driver.Values.parameters;
 
 public class Example {
 
-	private static final String QUERY = """
-			    UNWIND $batch AS row
+	private static final String QUERY = "UNWIND $batch AS row " +
 
-			    MERGE (a:ARTICLE { _id: row.id })
-			    SET a.title = row.title
+			"MERGE (a:ARTICLE { _id: row.id }) " + "SET a.title = row.title " +
 
-			    WITH a, row
+			"WITH a, row " +
 
-			    UNWIND row.authors AS authorName
-			    MERGE (au:AUTHOR { name: authorName })
-			    MERGE (au)-[:AUTHORED]->(a)
+			"UNWIND row.authors AS author " + "MERGE (au:AUTHOR { _id: author.id }) " + "SET au.name = author.name "
+			+ "MERGE (au)-[:AUTHORED]->(a) " +
 
-			    WITH a, row
+			"WITH a, row " +
 
-			    UNWIND row.citations AS refId
-			    MERGE (ref:ARTICLE { _id: refId })
-			    MERGE (a)-[:CITES]->(ref)
-			""";
+			"UNWIND row.citations AS refId " + "MERGE (ref:ARTICLE { _id: refId }) " + "MERGE (a)-[:CITES]->(ref)";
 
 	public static void main(String[] args) throws IOException, InterruptedException {
 
@@ -45,6 +39,7 @@ public class Example {
 
 		Driver driver = GraphDatabase.driver("bolt://" + neo4jIP + ":7687", AuthTokens.basic("neo4j", "test"));
 
+		// Wait for Neo4j
 		while (true) {
 			try {
 				System.out.println("Waiting for Neo4j...");
@@ -83,16 +78,28 @@ public class Example {
 					JsonNode json = mapper.readTree(line);
 
 					String id = json.has("id") ? json.get("id").asText() : null;
-					if (id == null)
+					if (id == null || id.isEmpty())
 						continue;
 
 					String title = json.has("title") ? json.get("title").asText() : "";
 
-					List<String> authors = new ArrayList<>();
+					// ✅ FIXED: authors as MAP (id + name)
+					List<Map<String, String>> authors = new ArrayList<>();
 					if (json.has("authors")) {
 						for (JsonNode a : json.get("authors")) {
-							if (a.has("name")) {
-								authors.add(a.get("name").asText());
+							if (a.has("id") && a.has("name")) {
+
+								String authorId = a.get("id").asText();
+								String name = a.get("name").asText();
+
+								if (authorId == null || authorId.isEmpty())
+									continue;
+
+								Map<String, String> author = new HashMap<>();
+								author.put("id", authorId);
+								author.put("name", name);
+
+								authors.add(author);
 							}
 						}
 					}
@@ -149,17 +156,9 @@ public class Example {
 		try (Session session = driver.session()) {
 			session.writeTransaction(tx -> {
 
-				tx.run("""
-						    CREATE CONSTRAINT article_id IF NOT EXISTS
-						    FOR (a:ARTICLE)
-						    REQUIRE a._id IS UNIQUE
-						""");
+				tx.run("CREATE CONSTRAINT article_id IF NOT EXISTS " + "FOR (a:ARTICLE) REQUIRE a._id IS UNIQUE");
 
-				tx.run("""
-						    CREATE CONSTRAINT author_name IF NOT EXISTS
-						    FOR (a:AUTHOR)
-						    REQUIRE a.name IS UNIQUE
-						""");
+				tx.run("CREATE CONSTRAINT author_id IF NOT EXISTS " + "FOR (a:AUTHOR) REQUIRE a._id IS UNIQUE");
 
 				return null;
 			});
