@@ -28,7 +28,7 @@ public class Example {
 	public static void main(String[] args) throws IOException, InterruptedException {
 
 		String jsonPath = System.getenv("JSON_FILE");
-		int maxNodes = Integer.max(1000, Integer.parseInt(System.getenv("MAX_NODES")));
+		int maxNodes = System.getenv("MAX_NODES") != null ? Integer.parseInt(System.getenv("MAX_NODES")) : -1;
 		String neo4jIP = System.getenv("NEO4J_IP");
 		int batchSize = Integer.max(1000, Integer.parseInt(System.getenv("BATCH_SIZE")));
 
@@ -72,7 +72,10 @@ public class Example {
 			Transaction tx = session.beginTransaction();
 
 			String line;
-			while ((line = br.readLine()) != null && count < maxNodes) {
+
+			long startTimeBatch = System.currentTimeMillis();
+
+			while ((line = br.readLine()) != null && (maxNodes != -1 ? count < maxNodes : true)) {
 
 				try {
 					JsonNode json = mapper.readTree(line);
@@ -125,10 +128,20 @@ public class Example {
 						batch.clear();
 						txCounter++;
 
-						System.out.println("Inserted: " + count);
-
 						tx.commit();
 						tx = session.beginTransaction();
+
+						long now = System.currentTimeMillis();
+
+						int elapsedBatch = (int) ((now - startTimeBatch) / 1000);
+						int elapsedTotal = (int) ((now - startTime) / 1000);
+
+						String elapsedTotalHuman = String.format("%02d:%02d:%02d", elapsedTotal / 3600,
+								(elapsedTotal % 3600) / 60, elapsedTotal % 60);
+
+						System.out.println(txCounter + "," + count + "," + elapsedBatch + "," + elapsedTotalHuman);
+
+						startTimeBatch = now;
 					}
 
 				} catch (Exception e) {

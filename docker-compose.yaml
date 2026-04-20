@@ -29,7 +29,7 @@ services:
     environment:
       # JSON_FILE=/file.jsonl
       - JSON_FILE=http://vmrum.isc.heia-fr.ch/files/DBLP-Citation-network-V18.jsonl
-      - MAX_NODES=100000
+      #- MAX_NODES=100000
       - BATCH_SIZE=5000
       - NEO4J_IP=172.24.0.10 # must be the same as above
     deploy:
