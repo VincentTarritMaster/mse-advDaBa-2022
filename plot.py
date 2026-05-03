@@ -13,7 +13,7 @@ def time_to_seconds(t):
 # Get logs from kubectl
 # -----------------------------
 cmd = [
-    "kubectl", "logs", "importer-wq64w",
+    "kubectl", "logs", "importer-m56pn",
     "-n", "tarrit-adv-daba-26"
 ]
 
