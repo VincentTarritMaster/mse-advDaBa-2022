@@ -140,10 +140,48 @@ kubectl logs <pod-importer> -n tarrit-adv-daba-26
 Temps mesuré pour charger `N + K` nœuds :
 
 ```text
-N articles : <à compléter>
-K auteurs : <à compléter>
-Total N + K : <à compléter>
-Temps de chargement : <à compléter> secondes
+N articles : 6'729'949
+K auteurs : 3'457'617
+Total N + K : 10'187'566
+Temps de chargement : 65'639 secondes
+```
+
+Ces valeurs ont été obtenues en exécutant la requête Cypher suivante dans le pod Neo4j :
+
+```bash
+kubectl exec -it pod/neo4j-57964d7b7c-z5gth -n tarrit-adv-daba-26 -- cypher-shell -u neo4j -p test
+```
+
+```cypher
+MATCH (a:ARTICLE)
+WITH count(a) AS N
+MATCH (au:AUTHOR)
+WITH N, count(au) AS K
+RETURN N, K, N + K AS total;
+```
+
+Résultat obtenu :
+
+```text
++------------------------------+
+| N       | K       | total    |
++------------------------------+
+| 6729949 | 3457617 | 10187566 |
++------------------------------+
+```
+
+Le nombre d'articles affiché par Neo4j (`6'729'949`) est légèrement supérieur au nombre d'articles lus dans les logs de l'importeur (`6'729'238`). Cette différence vient du fait que la requête d'import crée aussi des nœuds `ARTICLE` pour les références citées lorsqu'elles n'existent pas encore, afin de pouvoir créer les relations `CITES`.
+
+Le chargement s'est terminé correctement avec le message suivant dans les logs :
+
+```text
+Finished. Inserted 6729238 articles in 65639 seconds.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  18:14 h
+[INFO] Finished at: 2026-05-04T04:47:58Z
+[INFO] ------------------------------------------------------------------------
 ```
 
 Le temps se récupère directement dans les logs du pod d'import. À la fin de l'exécution, le programme affiche une ligne de ce type :
@@ -161,6 +199,8 @@ La valeur `<temps>` correspond au temps total en secondes entre le début du cha
 Ces lignes permettent de suivre la progression batch par batch et de retrouver le temps total au moment du dernier batch.
 
 Un graphe peut aussi être généré avec le script Python `plot.py`. Ce script récupère les logs du pod d'import avec `kubectl logs`, ignore les lignes précédant la création des contraintes, puis analyse les lignes de progression produites par l'importeur. Il extrait notamment le nombre d'articles déjà traités, le temps du batch courant et le temps total écoulé. Le graphique obtenu permet de visualiser l'évolution du temps de traitement des batchs pendant l'import, avec une courbe de tendance. Les axes supérieurs indiquent aussi le nombre d'éléments traités et le temps écoulé, ce qui permet de relier facilement les performances observées à l'avancement réel du chargement.
+
+![Évolution du temps d'import](importing_time.png)
 
 Pour obtenir `N` et `K` après chargement, on peut utiliser :
 
