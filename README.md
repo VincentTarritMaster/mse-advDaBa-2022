@@ -2,8 +2,8 @@
 
 ## Groupe
 
-- **ID du groupe :** `TarritAdvDaBa26` (à confirmer)
-- **Membres :** Vincent Tarrit (à compléter si nécessaire)
+- **ID du groupe :** `TarritAdvDaBa26`
+- **Membres :** Vincent Tarrit
 
 ## Résumé de la solution
 
@@ -86,7 +86,7 @@ tarrit-adv-daba-26
 Le pod contenant Neo4j est :
 
 ```text
-<à compléter avec la sortie de `kubectl get pods -n tarrit-adv-daba-26 -l app=neo4j`>
+neo4j-57964d7b7c-z5gth
 ```
 
 Commande de vérification :
@@ -120,19 +120,13 @@ MATCH ()-[r:CITES]->() RETURN count(r) AS citationRelations;
 Le chargement est effectué par le job Kubernetes `importer`. Le pod dont les logs prouvent le chargement est :
 
 ```text
-<à compléter avec la sortie de `kubectl get pods -n tarrit-adv-daba-26 -l app=importer`>
-```
-
-Dans `deploy.sh`, un exemple de pod d'import apparaît :
-
-```text
-importer-wq64w
+importer-c8wmt
 ```
 
 Commande pour récupérer les logs :
 
 ```bash
-kubectl logs <pod-importer> -n tarrit-adv-daba-26
+kubectl logs importer-c8wmt -n tarrit-adv-daba-26
 ```
 
 ## Temps de chargement
@@ -190,10 +184,10 @@ Le temps se récupère directement dans les logs du pod d'import. À la fin de l
 Finished. Inserted <N> articles in <temps> seconds.
 ```
 
-La valeur `<temps>` correspond au temps total en secondes entre le début du chargement et la fin de l'insertion. Les logs intermédiaires contiennent aussi des lignes au format :
+La valeur `65639` correspond au temps total en secondes entre le début du chargement et la fin de l'insertion. Les logs intermédiaires contiennent aussi des lignes au format :
 
 ```text
-<numero_batch>,<nombre_articles_chargés>,<temps_batch_secondes>,<temps_total_hh:mm:ss>
+<numero_batch>,<nombre_articles_chargés_total>,<temps_batch_secondes>,<temps_total_hh:mm:ss>
 ```
 
 Ces lignes permettent de suivre la progression batch par batch et de retrouver le temps total au moment du dernier batch.
@@ -212,12 +206,6 @@ MATCH (au:AUTHOR) RETURN count(au) AS K;
 ## Dépôt Git
 
 Le code, les descripteurs Kubernetes, les scripts et les fichiers utiles sont disponibles dans le dépôt suivant :
-
-```text
-git@github.com:VincentTarritMaster/mse-advDaBa-2022.git
-```
-
-Lien clonable en HTTPS :
 
 ```text
 https://github.com/VincentTarritMaster/mse-advDaBa-2022.git
